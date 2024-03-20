@@ -17,7 +17,7 @@ func TestChapa(t *testing.T) {
 
 		Convey("can prompt payment from users", func() {
 
-			request := &ChapaPaymentRequest{
+			request := &PaymentRequest{
 				Amount:         10,
 				Currency:       "ETB",
 				FirstName:      "Chapa",
@@ -52,7 +52,7 @@ func TestChapa(t *testing.T) {
 
 		Convey("cannot verify a transaction that's yet to be paid for", func() {
 
-			request := &ChapaPaymentRequest{
+			request := &PaymentRequest{
 				Amount:         10,
 				Currency:       "ETB",
 				FirstName:      "Chapa",

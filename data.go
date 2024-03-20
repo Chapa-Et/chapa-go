@@ -1,7 +1,12 @@
 package chapa
 
+import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
+)
+
 type (
-	ChapaPaymentRequest struct {
+	PaymentRequest struct {
 		Amount         float64                `json:"amount"`
 		Currency       string                 `json:"currency"`
 		Email          string                 `json:"email"`
@@ -12,7 +17,7 @@ type (
 		Customization  map[string]interface{} `json:"customization"`
 	}
 
-	ChapaPaymentResponse struct {
+	PaymentResponse struct {
 		Message string `json:"message"`
 		Status  string `json:"status"`
 		Data    struct {
@@ -20,7 +25,7 @@ type (
 		}
 	}
 
-	ChapaVerifyResponse struct {
+	VerifyResponse struct {
 		Message string `json:"message"`
 		Status  string `json:"status"`
 		Data    struct {
@@ -28,3 +33,15 @@ type (
 		}
 	}
 )
+
+func (c PaymentRequest) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Email, validation.Required.Error("email is required"), is.Email),
+		validation.Field(&c.FirstName, validation.Required.Error("first name is required")),
+		validation.Field(&c.LastName, validation.Required.Error("last name is required")),
+		validation.Field(&c.TransactionRef, validation.Required.Error("transaction reference is required")),
+		validation.Field(&c.Currency, validation.Required.Error("currency is required")),
+		validation.Field(&c.Amount, validation.Required.Error("amount is required")),
+		validation.Field(&c.CallbackURL, validation.Required.Error("callback url is required"), is.URL),
+	)
+}

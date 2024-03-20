@@ -2,7 +2,7 @@
 Unofficial Golang SDK for Chapa ET API
 
 ### Todo:
-- [ ] We could add nice validations on demand.
+- [x] We could add nice validations on demand.
 
 
 ### Usage
