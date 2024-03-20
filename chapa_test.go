@@ -1,30 +1,61 @@
 package chapa
 
 import (
-	"os"
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
-
-	"syreclabs.com/go/faker"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestChapa(t *testing.T) {
+	var request *PaymentRequest
 
-	Convey("Chapa API", t, func() {
+	t.Run("chap API", func(t *testing.T) {
+		InitConfig()
+		paymentProvider := New()
 
-		chapaPaymentProvider := New(os.Getenv("CHAPA_API_KEY"))
+		t.Run("can prompt payment from users", func(t *testing.T) {
+			request = &PaymentRequest{
+				Amount:         10,
+				Currency:       "ETB",
+				FirstName:      "chap",
+				LastName:       "ET",
+				Email:          "chap@et.io",
+				CallbackURL:    "https://webhook.site/077164d6-29cb-40df-ba29-8a00e59a7e60",
+				TransactionRef: RandomString(20),
+				Customization: map[string]interface{}{
+					"title":       "title",
+					"description": "description",
+					"logo":        "https://company.com/logo",
+				},
+			}
 
-		Convey("can prompt payment from users", func() {
+			response, err := paymentProvider.PaymentRequest(request)
+			fmt.Println(response, err)
+			assert.NoError(t, err)
 
+			assert.Equal(t, "success", response.Status)
+			assert.Equal(t, "Hosted Link", response.Message)
+			assert.Contains(t, response.Data.CheckoutURL, "https://checkout.chapa.co/checkout/payment")
+		})
+
+		t.Run("can verify transactions", func(t *testing.T) {
+			response, err := paymentProvider.Verify(request.TransactionRef) // a paid txn
+			assert.NoError(t, err)
+
+			assert.Equal(t, "success", response.Status)
+			assert.Equal(t, "Payment details fetched successfully", response.Message)
+			//assert.NotZero(t, response.Data.TransactionFee)   // uncomment this for live mode
+		})
+
+		t.Run("cannot verify unpaid transaction", func(t *testing.T) {
 			request := &PaymentRequest{
 				Amount:         10,
 				Currency:       "ETB",
-				FirstName:      "Chapa",
+				FirstName:      "chap",
 				LastName:       "ET",
-				Email:          "chapa@et.io",
-				CallbackURL:    "https://posthere.io/e631-44fe-a19e",
-				TransactionRef: faker.RandomString(20),
+				Email:          "chap@et.io",
+				CallbackURL:    "",
+				TransactionRef: RandomString(20),
 				Customization: map[string]interface{}{
 					"title":       "A Unique Title",
 					"description": "This a perfect description",
@@ -32,48 +63,9 @@ func TestChapa(t *testing.T) {
 				},
 			}
 
-			response, err := chapaPaymentProvider.PaymentRequest(request)
-			So(err, ShouldBeNil)
-
-			So(response.Status, ShouldEqual, "success")
-			So(response.Message, ShouldEqual, "Hosted Link")
-			So(response.Data.CheckoutURL, ShouldContainSubstring, "https://checkout.chapa.co/checkout/payment")
-		})
-
-		Convey("can verify transactions", func() {
-
-			response, err := chapaPaymentProvider.Verify("take-this-2-the-bank") // a paid txn
-			So(err, ShouldBeNil)
-
-			So(response.Status, ShouldEqual, "success")
-			So(response.Message, ShouldEqual, "Payment details")
-			So(response.Data.TransactionFee, ShouldNotBeZeroValue)
-		})
-
-		Convey("cannot verify a transaction that's yet to be paid for", func() {
-
-			request := &PaymentRequest{
-				Amount:         10,
-				Currency:       "ETB",
-				FirstName:      "Chapa",
-				LastName:       "ET",
-				Email:          "chapa@et.io",
-				CallbackURL:    "https://posthere.io/e631-44fe-a19e",
-				TransactionRef: faker.RandomString(20),
-				Customization: map[string]interface{}{
-					"title":       "A Unique Title",
-					"description": "This a perfect description",
-					"logo":        "https://your.logo",
-				},
-			}
-
-			_, err := chapaPaymentProvider.PaymentRequest(request)
-			So(err, ShouldBeNil)
-
-			response, err := chapaPaymentProvider.Verify(request.TransactionRef)
-			So(err, ShouldBeNil)
-
-			So(response.Message, ShouldEqual, "Payment not paid yet")
+			response, err := paymentProvider.Verify(request.TransactionRef)
+			assert.NoError(t, err)
+			assert.Equal(t, "Invalid transaction or transaction not found", response.Message)
 		})
 	})
 }

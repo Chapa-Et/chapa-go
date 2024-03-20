@@ -7,8 +7,6 @@ import (
 	"log"
 	"sync"
 	"time"
-
-	"syreclabs.com/go/faker"
 )
 
 type (
@@ -55,19 +53,19 @@ var (
 			ID:        1002,
 			FirstName: "Jon",
 			LastName:  "Do",
-			Email:     faker.RandomString(5) + "@gmail.com",
+			Email:     RandomString(5) + "@gmail.com",
 		},
 		{
 			ID:        1032,
 			FirstName: "Mary",
 			LastName:  "Josef",
-			Email:     faker.RandomString(5) + "@gmail.com",
+			Email:     RandomString(5) + "@gmail.com",
 		},
 	}
 
 	transactions = []*PaymentTransaction{
 		{
-			TransactionID: faker.RandomString(10),
+			TransactionID: RandomString(10),
 			Amount:        10.00,
 			MerchantFee:   0.35,
 			Currency:      "ETB",
@@ -75,7 +73,7 @@ var (
 			User:          users[0],
 		},
 		{
-			TransactionID: faker.RandomString(10),
+			TransactionID: RandomString(10),
 			Amount:        120.00,
 			MerchantFee:   1.35,
 			Currency:      "USD",
@@ -93,12 +91,12 @@ type (
 
 	AppExamplePaymentService struct {
 		mu                     *sync.Mutex
-		paymentGatewayProvider ChapaAPI
+		paymentGatewayProvider API
 	}
 )
 
 func NewExamplePaymentService(
-	paymentGatewayProvider ChapaAPI,
+	paymentGatewayProvider API,
 ) *AppExamplePaymentService {
 	return &AppExamplePaymentService{
 		mu:                     &sync.Mutex{},
@@ -119,8 +117,8 @@ func (s *AppExamplePaymentService) Checkout(ctx context.Context, userID int64, f
 		Email:          user.Email,
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
-		CallbackURL:    faker.Internet().Url(),
-		TransactionRef: faker.RandomString(10),
+		CallbackURL:    "https://webhook.site/077164d6-29cb-40df-ba29-8a00e59a7e60",
+		TransactionRef: RandomString(10),
 	}
 
 	response, err := s.paymentGatewayProvider.PaymentRequest(invoice)

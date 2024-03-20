@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,32 +13,30 @@ import (
 )
 
 const (
-	chapaAcceptPaymentV1APIURL = "https://api.chapa.co/v1/transaction/initialize"
-	chapaVerifyPaymentV1APIURL = "https://api.chapa.co/v1/transaction/verify/%v"
+	acceptPaymentV1APIURL = "https://api.chapa.co/v1/transaction/initialize"
+	verifyPaymentV1APIURL = "https://api.chapa.co/v1/transaction/verify/%v"
 )
 
-type (
-	ChapaAPI interface {
-		PaymentRequest(request *PaymentRequest) (*PaymentResponse, error)
-		Verify(txnRef string) (*VerifyResponse, error)
-	}
+type API interface {
+	PaymentRequest(request *PaymentRequest) (*PaymentResponse, error)
+	Verify(txnRef string) (*VerifyResponse, error)
+}
 
-	Chapa struct {
-		apiKey string
-		client *http.Client
-	}
-)
+type chap struct {
+	apiKey string
+	client *http.Client
+}
 
-func New(apiKey string) *Chapa {
-	return &Chapa{
-		apiKey: apiKey,
+func New() API {
+	return &chap{
+		apiKey: viper.GetString("API_KEY"),
 		client: &http.Client{
 			Timeout: 1 * time.Minute,
 		},
 	}
 }
 
-func (c *Chapa) PaymentRequest(request *PaymentRequest) (*PaymentResponse, error) {
+func (c *chap) PaymentRequest(request *PaymentRequest) (*PaymentResponse, error) {
 	var err error
 	if err = request.Validate(); err != nil {
 		err := fmt.Errorf("invalid input %v", err)
@@ -46,12 +46,12 @@ func (c *Chapa) PaymentRequest(request *PaymentRequest) (*PaymentResponse, error
 
 	data, err := json.Marshal(request)
 	if err != nil {
-		return &PaymentResponse{}, err
+		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, chapaAcceptPaymentV1APIURL, bytes.NewBuffer(data))
+	req, err := http.NewRequest(http.MethodPost, acceptPaymentV1APIURL, bytes.NewBuffer(data))
 	if err != nil {
-		return &PaymentResponse{}, err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -60,31 +60,30 @@ func (c *Chapa) PaymentRequest(request *PaymentRequest) (*PaymentResponse, error
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return &PaymentResponse{}, err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return &PaymentResponse{}, err
+		return nil, err
 	}
 
-	var chapaPaymentResponse PaymentResponse
+	var paymentResponse PaymentResponse
 
-	err = json.Unmarshal(body, &chapaPaymentResponse)
+	err = json.Unmarshal(body, &paymentResponse)
 	if err != nil {
-		return &PaymentResponse{}, err
+		return nil, err
 	}
-
-	return &chapaPaymentResponse, nil
+	return &paymentResponse, nil
 }
 
-func (c *Chapa) Verify(txnRef string) (*VerifyResponse, error) {
+func (c *chap) Verify(txnRef string) (*VerifyResponse, error) {
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(chapaVerifyPaymentV1APIURL, txnRef), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(verifyPaymentV1APIURL, txnRef), nil)
 	if err != nil {
-		return &VerifyResponse{}, err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -93,22 +92,22 @@ func (c *Chapa) Verify(txnRef string) (*VerifyResponse, error) {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return &VerifyResponse{}, err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return &VerifyResponse{}, err
+		return nil, err
 	}
 
-	var chapaVerifyResponse VerifyResponse
+	var verifyResponse VerifyResponse
 
-	err = json.Unmarshal(body, &chapaVerifyResponse)
+	err = json.Unmarshal(body, &verifyResponse)
 	if err != nil {
-		return &VerifyResponse{}, err
+		return nil, err
 	}
 
-	return &chapaVerifyResponse, nil
+	return &verifyResponse, nil
 }

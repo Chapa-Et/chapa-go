@@ -2,7 +2,6 @@ package chapa
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 type (
@@ -12,6 +11,7 @@ type (
 		Email          string                 `json:"email"`
 		FirstName      string                 `json:"first_name"`
 		LastName       string                 `json:"last_name"`
+		Phone          string                 `json:"phone"`
 		CallbackURL    string                 `json:"callback_url"`
 		TransactionRef string                 `json:"tx_ref"`
 		Customization  map[string]interface{} `json:"customization"`
@@ -36,12 +36,8 @@ type (
 
 func (c PaymentRequest) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.Email, validation.Required.Error("email is required"), is.Email),
-		validation.Field(&c.FirstName, validation.Required.Error("first name is required")),
-		validation.Field(&c.LastName, validation.Required.Error("last name is required")),
 		validation.Field(&c.TransactionRef, validation.Required.Error("transaction reference is required")),
 		validation.Field(&c.Currency, validation.Required.Error("currency is required")),
 		validation.Field(&c.Amount, validation.Required.Error("amount is required")),
-		validation.Field(&c.CallbackURL, validation.Required.Error("callback url is required"), is.URL),
 	)
 }
