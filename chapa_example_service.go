@@ -7,8 +7,6 @@ import (
 	"log"
 	"sync"
 	"time"
-
-	"syreclabs.com/go/faker"
 )
 
 type (
@@ -55,19 +53,19 @@ var (
 			ID:        1002,
 			FirstName: "Jon",
 			LastName:  "Do",
-			Email:     faker.Internet().Email(),
+			Email:     RandomString(5) + "@gmail.com",
 		},
 		{
 			ID:        1032,
 			FirstName: "Mary",
 			LastName:  "Josef",
-			Email:     faker.Internet().Email(),
+			Email:     RandomString(5) + "@gmail.com",
 		},
 	}
 
 	transactions = []*PaymentTransaction{
 		{
-			TransactionID: faker.RandomString(10),
+			TransactionID: RandomString(10),
 			Amount:        10.00,
 			MerchantFee:   0.35,
 			Currency:      "ETB",
@@ -75,7 +73,7 @@ var (
 			User:          users[0],
 		},
 		{
-			TransactionID: faker.RandomString(10),
+			TransactionID: RandomString(10),
 			Amount:        120.00,
 			MerchantFee:   1.35,
 			Currency:      "USD",
@@ -87,18 +85,18 @@ var (
 
 type (
 	ExamplePaymentService interface {
-		Checkout(ctx context.Context, userID int64, form *CheckoutForm) (*ChapaPaymentResponse, error)
+		Checkout(ctx context.Context, userID int64, form *CheckoutForm) (*PaymentResponse, error)
 		ListPaymentTransactions(ctx context.Context) (*TransactionList, error)
 	}
 
 	AppExamplePaymentService struct {
 		mu                     *sync.Mutex
-		paymentGatewayProvider ChapaAPI
+		paymentGatewayProvider API
 	}
 )
 
 func NewExamplePaymentService(
-	paymentGatewayProvider ChapaAPI,
+	paymentGatewayProvider API,
 ) *AppExamplePaymentService {
 	return &AppExamplePaymentService{
 		mu:                     &sync.Mutex{},
@@ -113,14 +111,14 @@ func (s *AppExamplePaymentService) Checkout(ctx context.Context, userID int64, f
 		return &PaymentTransaction{}, err
 	}
 
-	invoice := &ChapaPaymentRequest{
+	invoice := &PaymentRequest{
 		Amount:         form.Amount,
 		Currency:       form.Currency,
 		Email:          user.Email,
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
-		CallbackURL:    faker.Internet().Url(),
-		TransactionRef: faker.RandomString(10),
+		CallbackURL:    "https://webhook.site/077164d6-29cb-40df-ba29-8a00e59a7e60",
+		TransactionRef: RandomString(10),
 	}
 
 	response, err := s.paymentGatewayProvider.PaymentRequest(invoice)
@@ -136,7 +134,7 @@ func (s *AppExamplePaymentService) Checkout(ctx context.Context, userID int64, f
 		return &PaymentTransaction{}, fmt.Errorf("failed to checkout err = %v", response.Message)
 	}
 
-	transcation := &PaymentTransaction{
+	transaction := &PaymentTransaction{
 		TransactionID: invoice.TransactionRef,
 		Amount:        form.Amount,
 		Currency:      form.Currency,
@@ -145,12 +143,12 @@ func (s *AppExamplePaymentService) Checkout(ctx context.Context, userID int64, f
 		TxnDate:       time.Now(),
 	}
 
-	err = s.savePaymentTransaction(ctx, transcation)
+	err = s.savePaymentTransaction(ctx, transaction)
 	if err != nil {
 		return &PaymentTransaction{}, nil
 	}
 
-	return transcation, nil
+	return transaction, nil
 }
 
 func (s *AppExamplePaymentService) ListPaymentTransactions(ctx context.Context) (*TransactionList, error) {

@@ -2,13 +2,13 @@
 Unofficial Golang SDK for Chapa ET API
 
 ### Todo:
-- [ ] We could add nice validations on demand.
+- [x] We could add nice validations on demand.
 
 
 ### Usage
 ##### 1. Installation
 ```
-    go get github.com/vonmutinda/chapa
+    go get github.com/Yinebeb-01/chapa-go
 ```
 
 ##### 2. Setup
@@ -18,24 +18,24 @@ Unofficial Golang SDK for Chapa ET API
 
     import (
         "os"
-        "github.com/vonmutinda/chapa"
+        chapa "github.com/Yinebeb-01/chapa-go"
     )
 
     func main(){
-        chapaAPI := chapa.New(os.Getenv("CHAPA_API_KEY"))
+        chapaAPI := chapa.New(os.Getenv("API_KEY"))
     }
 ```
 
 ##### 3. Accept Payments
 ```go
-    request := &chapa.ChapaPaymentRequest{
+    request := &chapa.PaymentRequest{
         Amount:         10,
         Currency:       "ETB",
         FirstName:      "Chapa",
         LastName:       "ET",
         Email:          "chapa@et.io",
         CallbackURL:    "https://posthere.io/e631-44fe-a19e",
-        TransactionRef: faker.RandomString(20),
+        TransactionRef: RandomString(20),
         Customization: map[string]interface{}{
             "title":       "A Unique Title",
             "description": "This a perfect description",
@@ -80,6 +80,6 @@ e.g
     5001: GatewayError
     5002: RejectedByGateway
 ```
-Juuust an example!
+Just an example!
 ### Contributions
 - Highly welcome
