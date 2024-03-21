@@ -1,7 +1,6 @@
 package chapa
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -30,7 +29,6 @@ func TestChapa(t *testing.T) {
 			}
 
 			response, err := paymentProvider.PaymentRequest(request)
-			fmt.Println(response, err)
 			assert.NoError(t, err)
 
 			assert.Equal(t, "success", response.Status)
@@ -66,6 +64,41 @@ func TestChapa(t *testing.T) {
 			response, err := paymentProvider.Verify(request.TransactionRef)
 			assert.NoError(t, err)
 			assert.Equal(t, "Invalid transaction or transaction not found", response.Message)
+		})
+
+		t.Run("successful bank transfer", func(t *testing.T) {
+			request := &BankTransfer{
+				AccountName:     "Yinebeb Tariku",
+				AccountNumber:   "34264263",
+				Amount:          10,
+				BeneficiaryName: "Yinebeb Tariku",
+				Currency:        "ETB",
+				Reference:       "3264063st01",
+				BankCode:        "32735b19-bb36-4cd7-b226-fb7451cd98f0",
+			}
+
+			response, err := paymentProvider.TransferToBank(request)
+			assert.NoError(t, err)
+
+			assert.Equal(t, "success", response.Status)
+			// update below assertion on live mode
+			assert.Equal(t, "Transfer queued successfully in Test Mode.", response.Message)
+			assert.NotEmpty(t, response.Data)
+		})
+
+		t.Run("invalid input bank transfer", func(t *testing.T) {
+			request := &BankTransfer{
+				AccountNumber: "34264263",
+				Amount:        10,
+				Currency:      "ETB",
+				Reference:     "3264063st01",
+				BankCode:      "32735b19-bb36-4cd7-b226-fb7451cd98f0",
+			}
+
+			response, err := paymentProvider.TransferToBank(request)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "invalid input")
+			assert.Nil(t, response)
 		})
 	})
 }
