@@ -4,7 +4,8 @@
 Unofficial Golang SDK for Chapa ET API
 
 ### Todo:
-- [x] We could add nice validations on demand.
+- [ ] We could add nice validations on demand.
+- [ ] Add implementation for the remaining API endpoints. 
 
 
 ### Usage
@@ -19,18 +20,17 @@ Unofficial Golang SDK for Chapa ET API
     package main
 
     import (
-        "os"
         chapa "github.com/Yinebeb-01/chapa-go"
     )
 
     func main(){
-        chapaAPI := chapa.New(os.Getenv("API_KEY"))
+        chapaAPI := chapa.New()
     }
 ```
 
 ##### 3. Accept Payments
 ```go
-    request := &chapa.PaymentRequest{
+    request := &chapaAPI.PaymentRequest{
         Amount:         10,
         Currency:       "ETB",
         FirstName:      "Chapa",
@@ -56,13 +56,29 @@ Unofficial Golang SDK for Chapa ET API
 
 ##### 4. Verify Payment Transactions
 ```go
-    response, err := chapa.Verify("your-txn-ref")
+    response, err := chapaAPI.Verify("your-txn-ref")
     if err != nil {
          fmt.Println(err)
          os.Exit(1)
     }
 
     fmt.Printf("verification response: %+v\n", response)
+```
+
+##### 5. Transfer to bank
+```go
+    	request := &BankTransfer{
+	        AccountName:     "Yinebeb Tariku",
+			AccountNumber:   "34264263",
+            Amount:          10,
+            BeneficiaryName: "Yinebeb Tariku",
+            Currency:        "ETB",
+            Reference:       "3264063st01",
+            BankCode:        "32735b19-bb36-4cd7-b226-fb7451cd98f0",
+        }
+		
+		response, err := chapaAPI.TransferToBank(request)
+        fmt.Printf("transfer response: %+v\n", response)
 ```
 
 ### Resources
