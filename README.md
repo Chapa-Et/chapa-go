@@ -14,6 +14,10 @@ Unofficial Golang SDK for Chapa ET API
     go get github.com/Yinebeb-01/chapa-go
 ```
 
+###### API_KEY
+Add your `API_KEY: CHASECK_xxxxxxxxxxxxxxxx` inside `config.yaml` file.
+If you want to run the githb action on your forked repository, you have to create a secrete key named `API_KEY`.
+
 ##### 2. Setup
 
 ```go
