@@ -67,18 +67,18 @@ Unofficial Golang SDK for Chapa ET API
 
 ##### 5. Transfer to bank
 ```go
-    	request := &BankTransfer{
-	        AccountName:     "Yinebeb Tariku",
-			AccountNumber:   "34264263",
-            Amount:          10,
-            BeneficiaryName: "Yinebeb Tariku",
-            Currency:        "ETB",
-            Reference:       "3264063st01",
-            BankCode:        "32735b19-bb36-4cd7-b226-fb7451cd98f0",
-        }
+    request := &BankTransfer{
+	    AccountName:     "Yinebeb Tariku", 
+	    AccountNumber:   "34264263", 
+	    Amount:          10,
+	    BeneficiaryName: "Yinebeb Tariku",
+	    Currency:        "ETB",
+	    Reference:       "3264063st01",
+	    BankCode:        "32735b19-bb36-4cd7-b226-fb7451cd98f0",
+	}
 		
-		response, err := chapaAPI.TransferToBank(request)
-        fmt.Printf("transfer response: %+v\n", response)
+	response, err := chapaAPI.TransferToBank(request)
+	fmt.Printf("transfer response: %+v\n", response)
 ```
 
 ### Resources
