@@ -1,4 +1,6 @@
-## Chapa Golang
+# Chapa-Go
+![build-workflow](https://github.com/Yinebeb-01/chapa-go/actions/workflows/test.yml/badge.svg)
+
 Unofficial Golang SDK for Chapa ET API
 
 ### Todo:
