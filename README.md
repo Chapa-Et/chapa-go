@@ -1,4 +1,12 @@
-# Chapa-Go
+<h1 align="center">
+<div align="center">
+  <a href="https://chapa.co/" target="_blank">
+    <img src="./docs/logo.png" width="320" alt="Nest Logo"/>
+  </a>
+  <p align="center">Go SDK for chapa</p>
+</div>
+</h1>
+
 ![build-workflow](https://github.com/Yinebeb-01/chapa-go/actions/workflows/test.yml/badge.svg)
 
 Unofficial Golang SDK for Chapa ET API
