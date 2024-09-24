@@ -9,84 +9,54 @@ import (
 	"time"
 )
 
-type (
-	CheckoutForm struct {
-		Amount   float64 `json:"amount"`
-		Currency string  `json:"currency"`
-	}
-
-	PaymentTransaction struct {
-		TransactionID string            `json:"transaction_id"`
-		User          *User             `json:"user"`
-		Amount        float64           `json:"amount"`
-		Currency      string            `json:"currency"`
-		MerchantFee   float64           `json:"merchant_fee"` // txn fee
-		Status        TransactionStatus `json:"status"`
-		TxnDate       time.Time         `json:"transaction_date"`
-	}
-
-	TransactionList struct {
-		Transactions []*PaymentTransaction `json:"transactions"`
-		// Pagination -> you could add pagination to this struct as well
-	}
-
-	TransactionStatus string
-
-	User struct {
-		ID        int64  `json:"id"`
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
-		Email     string `json:"email"`
-	}
-)
-
-const (
-	FailedTransactionStatus  TransactionStatus = "failed"
-	PendingTransactionStatus TransactionStatus = "pending"
-	SuccessTransactionStatus TransactionStatus = "success"
-)
-
 // Placeholder data
 var (
-	users = []*User{
+	firstName1 = "Jon"
+	firstName2 = "Do"
+	lastName1  = "Mary"
+	lastName2  = "Josef"
+	email1     = RandomString(5) + "@gmail.com"
+	email2     = RandomString(5) + "@gmail.com"
+
+	Customers = []Customer{
 		{
 			ID:        1002,
-			FirstName: "Jon",
-			LastName:  "Do",
-			Email:     RandomString(5) + "@gmail.com",
+			FirstName: &firstName1,
+			LastName:  &lastName1,
+			Email:     &email1,
 		},
 		{
 			ID:        1032,
-			FirstName: "Mary",
-			LastName:  "Josef",
-			Email:     RandomString(5) + "@gmail.com",
+			FirstName: &firstName2,
+			LastName:  &lastName2,
+			Email:     &email2,
 		},
 	}
 
-	transactions = []*PaymentTransaction{
+	transactions = []Transaction{
 		{
-			TransactionID: RandomString(10),
-			Amount:        10.00,
-			MerchantFee:   0.35,
-			Currency:      "ETB",
-			TxnDate:       time.Now(),
-			User:          users[0],
+			TransID:   RandomString(10),
+			Amount:    "10.00",
+			Charge:    "0.35",
+			Currency:  "ETB",
+			CreatedAt: time.Now().String(),
+			Customer:  &Customers[0],
 		},
 		{
-			TransactionID: RandomString(10),
-			Amount:        120.00,
-			MerchantFee:   1.35,
-			Currency:      "USD",
-			TxnDate:       time.Now(),
-			User:          users[1],
+			TransID:   RandomString(10),
+			Amount:    "20.00",
+			Charge:    "0.40",
+			Currency:  "ETB",
+			CreatedAt: time.Now().String(),
+			Customer:  &Customers[0],
 		},
 	}
 )
 
 type (
 	ExamplePaymentService interface {
-		Checkout(ctx context.Context, userID int64, form *CheckoutForm) (*PaymentResponse, error)
-		ListPaymentTransactions(ctx context.Context) (*TransactionList, error)
+		Checkout(ctx context.Context, CustomerID int64, form *CheckoutForm) (*PaymentResponse, error)
+		ListTransactions(ctx context.Context) (*TransactionList, error)
 	}
 
 	AppExamplePaymentService struct {
@@ -104,54 +74,54 @@ func NewExamplePaymentService(
 	}
 }
 
-func (s *AppExamplePaymentService) Checkout(ctx context.Context, userID int64, form *CheckoutForm) (*PaymentTransaction, error) {
+func (s *AppExamplePaymentService) Checkout(ctx context.Context, CustomerID int64, form *CheckoutForm) (*Transaction, error) {
 
-	user, err := s.userByID(ctx, userID)
+	Customer, err := s.CustomerByID(ctx, CustomerID)
 	if err != nil {
-		return &PaymentTransaction{}, err
+		return &Transaction{}, err
 	}
 
 	invoice := &PaymentRequest{
 		Amount:         form.Amount,
 		Currency:       form.Currency,
-		Email:          user.Email,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
+		Email:          *Customer.Email,
+		FirstName:      *Customer.FirstName,
+		LastName:       *Customer.LastName,
 		CallbackURL:    "https://webhook.site/077164d6-29cb-40df-ba29-8a00e59a7e60",
 		TransactionRef: RandomString(10),
 	}
 
 	response, err := s.paymentGatewayProvider.PaymentRequest(invoice)
 	if err != nil {
-		return &PaymentTransaction{}, err
+		return &Transaction{}, err
 	}
 
 	if response.Status != "success" {
 
 		// log the response
-		log.Printf("[ERROR] Failed to checkout user request response = [%+v]", response)
+		log.Printf("[ERROR] Failed to checkout Customer request response = [%+v]", response)
 
-		return &PaymentTransaction{}, fmt.Errorf("failed to checkout err = %v", response.Message)
+		return &Transaction{}, fmt.Errorf("failed to checkout err = %v", response.Message)
 	}
 
-	transaction := &PaymentTransaction{
-		TransactionID: invoice.TransactionRef,
-		Amount:        form.Amount,
-		Currency:      form.Currency,
-		User:          user,
-		Status:        PendingTransactionStatus,
-		TxnDate:       time.Now(),
+	transaction := Transaction{
+		TransID:   invoice.TransactionRef,
+		Amount:    fmt.Sprintf("%.2f", form.Amount),
+		Currency:  form.Currency,
+		Customer:  Customer,
+		Status:    PendingTransactionStatus,
+		CreatedAt: time.Now().String(),
 	}
 
-	err = s.savePaymentTransaction(ctx, transaction)
+	err = s.saveTransaction(ctx, transaction)
 	if err != nil {
-		return &PaymentTransaction{}, nil
+		return &Transaction{}, nil
 	}
 
-	return transaction, nil
+	return &transaction, nil
 }
 
-func (s *AppExamplePaymentService) ListPaymentTransactions(ctx context.Context) (*TransactionList, error) {
+func (s *AppExamplePaymentService) ListTransactions(ctx context.Context) (*TransactionList, error) {
 
 	// validations here
 
@@ -162,24 +132,24 @@ func (s *AppExamplePaymentService) ListPaymentTransactions(ctx context.Context) 
 	return transactionList, nil
 }
 
-func (s *AppExamplePaymentService) savePaymentTransaction(ctx context.Context, transaction *PaymentTransaction) error {
+func (s *AppExamplePaymentService) saveTransaction(ctx context.Context, transaction Transaction) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	transactions = append([]*PaymentTransaction{transaction}, transactions...)
+	transactions = append([]Transaction{transaction}, transactions...)
 
 	return nil
 }
 
-// userByID - normally you'd fetch user from the db
-func (s *AppExamplePaymentService) userByID(ctx context.Context, userID int64) (*User, error) {
+// CustomerByID - normally you'd fetch Customer from the db
+func (s *AppExamplePaymentService) CustomerByID(ctx context.Context, CustomerID int64) (*Customer, error) {
 
-	for index := range users {
-		if users[index].ID == userID {
-			return users[index], nil
+	for index := range Customers {
+		if Customers[index].ID == CustomerID {
+			return &Customers[index], nil
 		}
 	}
 
-	return &User{}, errors.New("user not found")
+	return &Customer{}, errors.New("Customer not found")
 }
