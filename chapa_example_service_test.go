@@ -2,8 +2,9 @@ package chapa
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChapaExampleService(t *testing.T) {
@@ -14,7 +15,7 @@ func TestChapaExampleService(t *testing.T) {
 	)
 
 	t.Run("can list payment transactions", func(t *testing.T) {
-		transactionList, err := exampleService.ListPaymentTransactions(ctx)
+		transactionList, err := exampleService.ListTransactions(ctx)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, len(transactionList.Transactions))
@@ -32,8 +33,8 @@ func TestChapaExampleService(t *testing.T) {
 		assert.Equal(t, form.Amount, paymentTxn.Amount)
 		assert.Equal(t, form.Currency, paymentTxn.Currency)
 		assert.Equal(t, PendingTransactionStatus, paymentTxn.Status)
-		assert.Zero(t, paymentTxn.MerchantFee)
-		assert.NotZero(t, paymentTxn.TransactionID)
+		assert.Zero(t, paymentTxn.Charge)
+		assert.NotZero(t, paymentTxn.TransID)
 
 		assert.Equal(t, 3, len(transactions))
 	})
