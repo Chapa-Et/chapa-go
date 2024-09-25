@@ -126,9 +126,9 @@ type (
 	BulkData struct {
 		AccountName   string `json:"account_name"`
 		AccountNumber string `json:"account_number"`
-		Amount        string `json:"amount"`
+		Amount        int64  `json:"amount"`
 		Reference     string `json:"reference"`
-		BankCode      int64  `json:"bank_code"`
+		BankCode      string `json:"bank_code"`
 	}
 
 	BulkTransferRequest struct {
@@ -178,8 +178,8 @@ func (t BankTransfer) Validate() error {
 
 func (t BulkTransferRequest) Validate() error {
 	return validation.ValidateStruct(&t,
-		validation.Field(&t.Title, validation.Required.Error("account name is required")),
+		validation.Field(&t.Title, validation.Required.Error("title of the bulk transfer is required")),
 		validation.Field(&t.Currency, validation.Required.Error("currency is required")),
-		validation.Field(&t.BulkData, validation.Empty.Error("atlease on account is required")),
+		validation.Field(&t.BulkData, validation.NilOrNotEmpty.Error("at least one account is required")),
 	)
 }

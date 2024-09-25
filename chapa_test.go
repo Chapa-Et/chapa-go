@@ -115,5 +115,43 @@ func TestChapa(t *testing.T) {
 			assert.Contains(t, err.Error(), "invalid input")
 			assert.Nil(t, response)
 		})
+
+		t.Run("successful bulk transfer", func(t *testing.T) {
+			bulkData := BulkData{
+				AccountName:   "Leul Abay Ejigu",
+				AccountNumber: "1000212482106",
+				Amount:        10,
+				Reference:     "3241342142sfdd",
+				BankCode:      "946",
+			}
+
+			request := &BulkTransferRequest{
+				Title:    "Transfer to leul",
+				Currency: "ETB",
+				BulkData: []BulkData{bulkData},
+			}
+
+			response, err := paymentProvider.bulkTransfer(request)
+			assert.NoError(t, err)
+
+			assert.Equal(t, "success", response.Status)
+			// update below assertion on live mode
+			// assert.Equal(t, "Bulk transfer queued successfully", response.Message)
+			assert.Equal(t, "Bulk Transfer queued successfully in Test Mode.", response.Message)
+			assert.NotEmpty(t, response.Data)
+		})
+
+		t.Run("invalid input for bulk transfer", func(t *testing.T) {
+			request := &BulkTransferRequest{
+				Title:    "",
+				Currency: "ETB",
+				BulkData: []BulkData{},
+			}
+
+			response, err := paymentProvider.bulkTransfer(request)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "invalid input")
+			assert.Nil(t, response)
+		})
 	})
 }
