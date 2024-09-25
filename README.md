@@ -7,7 +7,7 @@
 </div>
 </h1>
 
-![build-workflow](https://github.com/Chapa-Et/chapa-go/actions/workflows/test.yml/badge.svg)
+![build-workflow](https://github.com/Yinebeb-01/chapa-go/actions/workflows/test.yml/badge.svg)
 
 Unofficial Golang SDK for Chapa ET API
 
