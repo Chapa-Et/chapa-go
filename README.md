@@ -7,7 +7,7 @@
 </div>
 </h1>
 
-![build-workflow](https://github.com/Yinebeb-01/chapa-go/actions/workflows/test.yml/badge.svg)
+![build-workflow](https://github.com/Chapa-Et/chapa-go/actions/workflows/test.yml/badge.svg)
 
 Unofficial Golang SDK for Chapa ET API
 
@@ -19,7 +19,7 @@ Unofficial Golang SDK for Chapa ET API
 ### Usage
 ##### 1. Installation
 ```
-    go get github.com/Yinebeb-01/chapa-go
+    go get github.com/Chapa-Et/chapa-go
 ```
 
 ###### API_KEY
@@ -32,7 +32,7 @@ If you want to run the githb action on your forked repository, you have to creat
     package main
 
     import (
-        chapa "github.com/Yinebeb-01/chapa-go"
+        chapa "github.com/Chapa-Et/chapa-go"
     )
 
     func main(){
@@ -91,6 +91,38 @@ If you want to run the githb action on your forked repository, you have to creat
 		
 	response, err := chapaAPI.TransferToBank(request)
 	fmt.Printf("transfer response: %+v\n", response)
+```
+
+##### 6. Get transactions
+```go	
+	response, err := chapaAPI.getTransactions()
+	fmt.Printf("transactions response: %+v\n", response)
+```
+
+##### 7. Get banks
+```go	
+	response, err := chapaAPI.getBanks()
+	fmt.Printf("banks response: %+v\n", response)
+```
+
+##### 8. Bulk transfer
+```go	
+	bulkData := BulkData{
+				AccountName:   "Leul Abay Ejigu",
+				AccountNumber: "1000212482106",
+				Amount:        10,
+				Reference:     "3241342142sfdd",
+				BankCode:      "946",
+			}
+
+    request := &BulkTransferRequest{
+        Title:    "Transfer to leul",
+        Currency: "ETB",
+        BulkData: []BulkData{bulkData},
+    }
+
+    response, err := chapaAPI.bulkTransfer(request)
+    fmt.Printf("bulk transfer response: %+v\n", response)
 ```
 
 ### Resources
