@@ -41,8 +41,6 @@ type (
 		AccountNumber string `json:"account_number"`
 		// Amount is the amount to be transferred to the recipient.
 		Amount float64 `json:"amount"`
-		// BeneficiaryName is the full name of the Transfer beneficiary (You may use it to match on your required).
-		BeneficiaryName string `json:"beneficiary_name"`
 		// Currency is the currency for the Transfer. Expected value is ETB.
 		Currency string `json:"currency"`
 		// Reference is merchant’s uniques reference for the transfer,
@@ -108,15 +106,15 @@ type (
 	Currency string
 
 	Bank struct {
-		ID            int      `json:"id"`
+		ID            int64    `json:"id"`
 		Swift         string   `json:"swift"`
 		Name          string   `json:"name"`
-		AcctLength    int      `json:"acct_length"`
-		CountryID     int      `json:"country_id"`
+		AcctLength    int64    `json:"acct_length"`
+		CountryID     int64    `json:"country_id"`
 		CreatedAt     string   `json:"created_at"`
 		UpdatedAt     string   `json:"updated_at"`
-		IsRTGS        *bool    `json:"is_rtgs"`
-		IsMobileMoney *bool    `json:"is_mobilemoney"`
+		IsRTGS        *int64   `json:"is_rtgs"`
+		IsMobileMoney *int64   `json:"is_mobilemoney"`
 		Currency      Currency `json:"currency"`
 	}
 
