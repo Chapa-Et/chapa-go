@@ -1,8 +1,9 @@
 package chapa
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChapa(t *testing.T) {
@@ -45,6 +46,21 @@ func TestChapa(t *testing.T) {
 			//assert.NotZero(t, response.Data.TransactionFee)   // uncomment this for live mode
 		})
 
+		t.Run("can get transactions", func(t *testing.T) {
+			response, err := paymentProvider.getTransactions()
+			assert.NoError(t, err)
+
+			assert.Equal(t, "success", response.Status)
+			assert.Equal(t, "Transactions retrieved successfully", response.Message)
+		})
+
+		t.Run("can get banks", func(t *testing.T) {
+			response, err := paymentProvider.getBanks()
+			assert.NoError(t, err)
+
+			assert.Equal(t, "Banks retrieved", response.Message)
+		})
+
 		t.Run("cannot verify unpaid transaction", func(t *testing.T) {
 			request := &PaymentRequest{
 				Amount:         10,
@@ -63,18 +79,17 @@ func TestChapa(t *testing.T) {
 
 			response, err := paymentProvider.Verify(request.TransactionRef)
 			assert.NoError(t, err)
-			assert.Equal(t, "Invalid transaction or transaction not found", response.Message)
+			assert.Equal(t, "Invalid transaction reference", response.Message)
 		})
 
 		t.Run("successful bank transfer", func(t *testing.T) {
 			request := &BankTransfer{
-				AccountName:     "Yinebeb Tariku",
-				AccountNumber:   "34264263",
-				Amount:          10,
-				BeneficiaryName: "Yinebeb Tariku",
-				Currency:        "ETB",
-				Reference:       "3264063st01",
-				BankCode:        "32735b19-bb36-4cd7-b226-fb7451cd98f0",
+				AccountName:   "Leul Abay Ejigu",
+				AccountNumber: "1000212482106",
+				Amount:        10,
+				Currency:      "ETB",
+				Reference:     "3241342142sfdd",
+				BankCode:      "946",
 			}
 
 			response, err := paymentProvider.TransferToBank(request)
@@ -96,6 +111,44 @@ func TestChapa(t *testing.T) {
 			}
 
 			response, err := paymentProvider.TransferToBank(request)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "invalid input")
+			assert.Nil(t, response)
+		})
+
+		t.Run("successful bulk transfer", func(t *testing.T) {
+			bulkData := BulkData{
+				AccountName:   "Leul Abay Ejigu",
+				AccountNumber: "1000212482106",
+				Amount:        10,
+				Reference:     "3241342142sfdd",
+				BankCode:      "946",
+			}
+
+			request := &BulkTransferRequest{
+				Title:    "Transfer to leul",
+				Currency: "ETB",
+				BulkData: []BulkData{bulkData},
+			}
+
+			response, err := paymentProvider.bulkTransfer(request)
+			assert.NoError(t, err)
+
+			assert.Equal(t, "success", response.Status)
+			// update below assertion on live mode
+			// assert.Equal(t, "Bulk transfer queued successfully", response.Message)
+			assert.Equal(t, "Bulk Transfer queued successfully in Test Mode.", response.Message)
+			assert.NotEmpty(t, response.Data)
+		})
+
+		t.Run("invalid input for bulk transfer", func(t *testing.T) {
+			request := &BulkTransferRequest{
+				Title:    "",
+				Currency: "ETB",
+				BulkData: []BulkData{},
+			}
+
+			response, err := paymentProvider.bulkTransfer(request)
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "invalid input")
 			assert.Nil(t, response)

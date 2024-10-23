@@ -32,9 +32,7 @@ type (
 			TransactionFee float64 `json:"charge"`
 		}
 	}
-)
 
-type (
 	// BankTransfer is an object used in bank transfer.
 	BankTransfer struct {
 		// AccountName is the recipient Account Name matches on their bank account.
@@ -43,8 +41,6 @@ type (
 		AccountNumber string `json:"account_number"`
 		// Amount is the amount to be transferred to the recipient.
 		Amount float64 `json:"amount"`
-		// BeneficiaryName is the full name of the Transfer beneficiary (You may use it to match on your required).
-		BeneficiaryName string `json:"beneficiary_name"`
 		// Currency is the currency for the Transfer. Expected value is ETB.
 		Currency string `json:"currency"`
 		// Reference is merchant’s uniques reference for the transfer,
@@ -60,6 +56,105 @@ type (
 		Status  string `json:"status"`
 		Data    string `json:"data"`
 	}
+
+	Transaction struct {
+		Status        TransactionStatus `json:"status"`
+		RefID         string            `json:"ref_id"`
+		Type          string            `json:"type"`
+		CreatedAt     string            `json:"created_at"`
+		Currency      string            `json:"currency"`
+		Amount        string            `json:"amount"`
+		Charge        string            `json:"charge"`
+		TransID       string            `json:"trans_id"` // Use pointer to handle null values
+		PaymentMethod string            `json:"payment_method"`
+		Customer      *Customer         `json:"customer"`
+	}
+
+	Customer struct {
+		ID        int64   `json:"id"`
+		Email     *string `json:"email"`
+		FirstName *string `json:"first_name"`
+		LastName  *string `json:"last_name"`
+		Mobile    *string `json:"mobile"`
+	}
+
+	Pagination struct {
+		PerPage      int     `json:"per_page"`
+		CurrentPage  int     `json:"current_page"`
+		FirstPageURL string  `json:"first_page_url"`
+		NextPageURL  *string `json:"next_page_url"`
+		PrevPageURL  *string `json:"prev_page_url"`
+	}
+
+	TransactionList struct {
+		Transactions []Transaction `json:"transactions"`
+		Pagination   Pagination    `json:"pagination"`
+	}
+
+	TransactionsResponse struct {
+		Message string          `json:"message"`
+		Status  string          `json:"status"`
+		Data    TransactionList `json:"data"`
+	}
+	CheckoutForm struct {
+		Amount   float64 `json:"amount"`
+		Currency string  `json:"currency"`
+	}
+
+	TransactionStatus string
+
+	Currency string
+
+	Bank struct {
+		ID            int64    `json:"id"`
+		Swift         string   `json:"swift"`
+		Name          string   `json:"name"`
+		AcctLength    int64    `json:"acct_length"`
+		CountryID     int64    `json:"country_id"`
+		CreatedAt     string   `json:"created_at"`
+		UpdatedAt     string   `json:"updated_at"`
+		IsRTGS        *int64   `json:"is_rtgs"`
+		IsMobileMoney *int64   `json:"is_mobilemoney"`
+		Currency      Currency `json:"currency"`
+	}
+
+	BanksResponse struct {
+		Message string `json:"message"`
+		Data    []Bank `json:"data"`
+	}
+
+	BulkData struct {
+		AccountName   string `json:"account_name"`
+		AccountNumber string `json:"account_number"`
+		Amount        int64  `json:"amount"`
+		Reference     string `json:"reference"`
+		BankCode      string `json:"bank_code"`
+	}
+
+	BulkTransferRequest struct {
+		Title    string     `json:"title"`
+		Currency string     `json:"currency"`
+		BulkData []BulkData `json:"bulk_data"` // Slice of BulkData for multiple entries
+	}
+
+	BulkTransferResponseData struct {
+		ID        int    `json:"id"`
+		CreatedAt string `json:"created_at"`
+	}
+
+	BulkTransferResponse struct {
+		Message string                   `json:"message"`
+		Status  string                   `json:"status"`
+		Data    BulkTransferResponseData `json:"data"`
+	}
+)
+
+const (
+	FailedTransactionStatus  TransactionStatus = "failed"
+	PendingTransactionStatus TransactionStatus = "pending"
+	SuccessTransactionStatus TransactionStatus = "success"
+	ETB                      Currency          = "ETB"
+	USD                      Currency          = "USD"
 )
 
 func (p PaymentRequest) Validate() error {
@@ -78,5 +173,13 @@ func (t BankTransfer) Validate() error {
 		validation.Field(&t.Currency, validation.Required.Error("currency is required")),
 		validation.Field(&t.Reference, validation.Required.Error("reference is required")),
 		validation.Field(&t.BankCode, validation.Required.Error("bank code is required")),
+	)
+}
+
+func (t BulkTransferRequest) Validate() error {
+	return validation.ValidateStruct(&t,
+		validation.Field(&t.Title, validation.Required.Error("title of the bulk transfer is required")),
+		validation.Field(&t.Currency, validation.Required.Error("currency is required")),
+		validation.Field(&t.BulkData, validation.NilOrNotEmpty.Error("at least one account is required")),
 	)
 }
