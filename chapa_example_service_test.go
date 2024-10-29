@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,8 +23,8 @@ func TestChapaExampleService(t *testing.T) {
 	})
 
 	t.Run("can successfully checkout", func(t *testing.T) {
-		form := &CheckoutForm{
-			Amount:   12.30,
+		form := CheckoutForm{
+			Amount:   decimal.NewFromFloat(12.30),
 			Currency: "ETB",
 		}
 
@@ -39,14 +40,14 @@ func TestChapaExampleService(t *testing.T) {
 		assert.Equal(t, 3, len(transactions))
 	})
 
-	t.Run("cannot checkout if user is unavailable", func(t *testing.T) {
-		form := &CheckoutForm{
-			Amount:   12.30,
+	t.Run("cannot checkout if customer is unavailable", func(t *testing.T) {
+		form := CheckoutForm{
+			Amount:   decimal.NewFromFloat(12.30),
 			Currency: "ETB",
 		}
 
 		_, err := exampleService.Checkout(ctx, 0, form)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "user not found")
+		assert.Contains(t, err.Error(), "Customer not found")
 	})
 }

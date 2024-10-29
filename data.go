@@ -2,11 +2,12 @@ package chapa
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/shopspring/decimal"
 )
 
 type (
 	PaymentRequest struct {
-		Amount         float64                `json:"amount"`
+		Amount         decimal.Decimal        `json:"amount"`
 		Currency       string                 `json:"currency"`
 		Email          string                 `json:"email"`
 		FirstName      string                 `json:"first_name"`
@@ -29,7 +30,7 @@ type (
 		Message string `json:"message"`
 		Status  string `json:"status"`
 		Data    struct {
-			TransactionFee float64 `json:"charge"`
+			Charge float64 `json:"charge"`
 		}
 	}
 
@@ -63,27 +64,27 @@ type (
 		Type          string            `json:"type"`
 		CreatedAt     string            `json:"created_at"`
 		Currency      string            `json:"currency"`
-		Amount        string            `json:"amount"`
+		Amount        decimal.Decimal   `json:"amount"`
 		Charge        string            `json:"charge"`
-		TransID       string            `json:"trans_id"` // Use pointer to handle null values
+		TransID       string            `json:"trans_id"`
 		PaymentMethod string            `json:"payment_method"`
-		Customer      *Customer         `json:"customer"`
+		Customer      Customer          `json:"customer"`
 	}
 
 	Customer struct {
-		ID        int64   `json:"id"`
-		Email     *string `json:"email"`
-		FirstName *string `json:"first_name"`
-		LastName  *string `json:"last_name"`
-		Mobile    *string `json:"mobile"`
+		ID        int64  `json:"id"`
+		Email     string `json:"email"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Mobile    string `json:"mobile"`
 	}
 
 	Pagination struct {
-		PerPage      int     `json:"per_page"`
-		CurrentPage  int     `json:"current_page"`
-		FirstPageURL string  `json:"first_page_url"`
-		NextPageURL  *string `json:"next_page_url"`
-		PrevPageURL  *string `json:"prev_page_url"`
+		PerPage      int    `json:"per_page"`
+		CurrentPage  int    `json:"current_page"`
+		FirstPageURL string `json:"first_page_url"`
+		NextPageURL  string `json:"next_page_url"`
+		PrevPageURL  string `json:"prev_page_url"`
 	}
 
 	TransactionList struct {
@@ -97,8 +98,8 @@ type (
 		Data    TransactionList `json:"data"`
 	}
 	CheckoutForm struct {
-		Amount   float64 `json:"amount"`
-		Currency string  `json:"currency"`
+		Amount   decimal.Decimal `json:"amount"`
+		Currency string          `json:"currency"`
 	}
 
 	TransactionStatus string
@@ -113,8 +114,8 @@ type (
 		CountryID     int64    `json:"country_id"`
 		CreatedAt     string   `json:"created_at"`
 		UpdatedAt     string   `json:"updated_at"`
-		IsRTGS        *int64   `json:"is_rtgs"`
-		IsMobileMoney *int64   `json:"is_mobilemoney"`
+		IsRTGS        int64    `json:"is_rtgs"`
+		IsMobileMoney int64    `json:"is_mobilemoney"`
 		Currency      Currency `json:"currency"`
 	}
 
@@ -134,7 +135,7 @@ type (
 	BulkTransferRequest struct {
 		Title    string     `json:"title"`
 		Currency string     `json:"currency"`
-		BulkData []BulkData `json:"bulk_data"` // Slice of BulkData for multiple entries
+		BulkData []BulkData `json:"bulk_data"`
 	}
 
 	BulkTransferResponseData struct {

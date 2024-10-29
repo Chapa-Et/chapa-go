@@ -3,6 +3,7 @@ package chapa
 import (
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func TestChapa(t *testing.T) {
 
 		t.Run("can prompt payment from users", func(t *testing.T) {
 			request = &PaymentRequest{
-				Amount:         10,
+				Amount:         decimal.NewFromInt(10),
 				Currency:       "ETB",
 				FirstName:      "chap",
 				LastName:       "ET",
@@ -43,11 +44,11 @@ func TestChapa(t *testing.T) {
 
 			assert.Equal(t, "success", response.Status)
 			assert.Equal(t, "Payment details fetched successfully", response.Message)
-			//assert.NotZero(t, response.Data.TransactionFee)   // uncomment this for live mode
+			// assert.NotZero(t, response.Data.Charge) // uncomment this for live mode
 		})
 
 		t.Run("can get transactions", func(t *testing.T) {
-			response, err := paymentProvider.getTransactions()
+			response, err := paymentProvider.GetTransactions()
 			assert.NoError(t, err)
 
 			assert.Equal(t, "success", response.Status)
@@ -55,7 +56,7 @@ func TestChapa(t *testing.T) {
 		})
 
 		t.Run("can get banks", func(t *testing.T) {
-			response, err := paymentProvider.getBanks()
+			response, err := paymentProvider.GetBanks()
 			assert.NoError(t, err)
 
 			assert.Equal(t, "Banks retrieved", response.Message)
@@ -63,18 +64,7 @@ func TestChapa(t *testing.T) {
 
 		t.Run("cannot verify unpaid transaction", func(t *testing.T) {
 			request := &PaymentRequest{
-				Amount:         10,
-				Currency:       "ETB",
-				FirstName:      "chap",
-				LastName:       "ET",
-				Email:          "chap@et.io",
-				CallbackURL:    "",
 				TransactionRef: RandomString(20),
-				Customization: map[string]interface{}{
-					"title":       "A Unique Title",
-					"description": "This a perfect description",
-					"logo":        "https://your.logo",
-				},
 			}
 
 			response, err := paymentProvider.Verify(request.TransactionRef)
@@ -131,7 +121,7 @@ func TestChapa(t *testing.T) {
 				BulkData: []BulkData{bulkData},
 			}
 
-			response, err := paymentProvider.bulkTransfer(request)
+			response, err := paymentProvider.BulkTransfer(request)
 			assert.NoError(t, err)
 
 			assert.Equal(t, "success", response.Status)
@@ -148,7 +138,7 @@ func TestChapa(t *testing.T) {
 				BulkData: []BulkData{},
 			}
 
-			response, err := paymentProvider.bulkTransfer(request)
+			response, err := paymentProvider.BulkTransfer(request)
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "invalid input")
 			assert.Nil(t, response)
