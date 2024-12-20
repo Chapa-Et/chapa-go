@@ -7,6 +7,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 // Placeholder data
@@ -21,34 +23,34 @@ var (
 	Customers = []Customer{
 		{
 			ID:        1002,
-			FirstName: &firstName1,
-			LastName:  &lastName1,
-			Email:     &email1,
+			FirstName: firstName1,
+			LastName:  lastName1,
+			Email:     email1,
 		},
 		{
 			ID:        1032,
-			FirstName: &firstName2,
-			LastName:  &lastName2,
-			Email:     &email2,
+			FirstName: firstName2,
+			LastName:  lastName2,
+			Email:     email2,
 		},
 	}
 
 	transactions = []Transaction{
 		{
 			TransID:   RandomString(10),
-			Amount:    "10.00",
+			Amount:    decimal.NewFromInt(10),
 			Charge:    "0.35",
 			Currency:  "ETB",
 			CreatedAt: time.Now().String(),
-			Customer:  &Customers[0],
+			Customer:  Customers[0],
 		},
 		{
 			TransID:   RandomString(10),
-			Amount:    "20.00",
+			Amount:    decimal.NewFromInt(20),
 			Charge:    "0.40",
 			Currency:  "ETB",
 			CreatedAt: time.Now().String(),
-			Customer:  &Customers[0],
+			Customer:  Customers[0],
 		},
 	}
 )
@@ -74,7 +76,7 @@ func NewExamplePaymentService(
 	}
 }
 
-func (s *AppExamplePaymentService) Checkout(ctx context.Context, CustomerID int64, form *CheckoutForm) (*Transaction, error) {
+func (s *AppExamplePaymentService) Checkout(ctx context.Context, CustomerID int64, form CheckoutForm) (*Transaction, error) {
 
 	Customer, err := s.CustomerByID(ctx, CustomerID)
 	if err != nil {
@@ -84,9 +86,9 @@ func (s *AppExamplePaymentService) Checkout(ctx context.Context, CustomerID int6
 	invoice := &PaymentRequest{
 		Amount:         form.Amount,
 		Currency:       form.Currency,
-		Email:          *Customer.Email,
-		FirstName:      *Customer.FirstName,
-		LastName:       *Customer.LastName,
+		Email:          Customer.Email,
+		FirstName:      Customer.FirstName,
+		LastName:       Customer.LastName,
 		CallbackURL:    "https://webhook.site/077164d6-29cb-40df-ba29-8a00e59a7e60",
 		TransactionRef: RandomString(10),
 	}
@@ -97,42 +99,39 @@ func (s *AppExamplePaymentService) Checkout(ctx context.Context, CustomerID int6
 	}
 
 	if response.Status != "success" {
-
-		// log the response
 		log.Printf("[ERROR] Failed to checkout Customer request response = [%+v]", response)
-
 		return &Transaction{}, fmt.Errorf("failed to checkout err = %v", response.Message)
 	}
 
 	transaction := Transaction{
 		TransID:   invoice.TransactionRef,
-		Amount:    fmt.Sprintf("%.2f", form.Amount),
+		Amount:    form.Amount,
 		Currency:  form.Currency,
 		Customer:  Customer,
 		Status:    PendingTransactionStatus,
 		CreatedAt: time.Now().String(),
 	}
 
-	err = s.saveTransaction(ctx, transaction)
+	err = s.SaveTransaction(ctx, transaction)
 	if err != nil {
-		return &Transaction{}, nil
+		return &Transaction{}, err
 	}
 
 	return &transaction, nil
 }
 
-func (s *AppExamplePaymentService) ListTransactions(ctx context.Context) (*TransactionList, error) {
+func (s *AppExamplePaymentService) ListTransactions(_ context.Context) (TransactionList, error) {
 
 	// validations here
 
-	transactionList := &TransactionList{
+	transactionList := TransactionList{
 		Transactions: transactions,
 	}
 
 	return transactionList, nil
 }
 
-func (s *AppExamplePaymentService) saveTransaction(ctx context.Context, transaction Transaction) error {
+func (s *AppExamplePaymentService) SaveTransaction(_ context.Context, transaction Transaction) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -142,14 +141,14 @@ func (s *AppExamplePaymentService) saveTransaction(ctx context.Context, transact
 	return nil
 }
 
-// CustomerByID - normally you'd fetch Customer from the db
-func (s *AppExamplePaymentService) CustomerByID(ctx context.Context, CustomerID int64) (*Customer, error) {
+// CustomerByID you'd fetch Customer from the db
+func (s *AppExamplePaymentService) CustomerByID(_ context.Context, CustomerID int64) (Customer, error) {
 
 	for index := range Customers {
 		if Customers[index].ID == CustomerID {
-			return &Customers[index], nil
+			return Customers[index], nil
 		}
 	}
 
-	return &Customer{}, errors.New("Customer not found")
+	return Customer{}, errors.New("Customer not found")
 }

@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -25,9 +24,9 @@ type API interface {
 	PaymentRequest(request *PaymentRequest) (*PaymentResponse, error)
 	Verify(txnRef string) (*VerifyResponse, error)
 	TransferToBank(request *BankTransfer) (*BankTransferResponse, error)
-	getTransactions() (*TransactionsResponse, error)
-	getBanks() (*BanksResponse, error)
-	bulkTransfer(*BulkTransferRequest) (*BulkTransferResponse, error)
+	GetTransactions() (*TransactionsResponse, error)
+	GetBanks() (*BanksResponse, error)
+	BulkTransfer(*BulkTransferRequest) (*BulkTransferResponse, error)
 }
 
 type chapa struct {
@@ -39,7 +38,7 @@ func New() API {
 	return &chapa{
 		apiKey: viper.GetString("API_KEY"),
 		client: &http.Client{
-			Timeout: 1 * time.Minute,
+			Timeout: viper.GetDuration("TIME_OUT"),
 		},
 	}
 }
@@ -48,7 +47,7 @@ func (c *chapa) PaymentRequest(request *PaymentRequest) (*PaymentResponse, error
 	var err error
 	if err = request.Validate(); err != nil {
 		err := fmt.Errorf("invalid input %v", err)
-		log.Printf("error %v input %v", err.Error(), request)
+		log.Printf("warning %v input %v", err.Error(), request)
 		return &PaymentResponse{}, err
 	}
 
@@ -124,7 +123,7 @@ func (c *chapa) TransferToBank(request *BankTransfer) (*BankTransferResponse, er
 	var err error
 	if err = request.Validate(); err != nil {
 		err := fmt.Errorf("invalid input %v", err)
-		log.Printf("error %v input %v", err, request)
+		log.Printf("warning %v input %v", err, request)
 		return nil, err
 	}
 
@@ -166,7 +165,7 @@ func (c *chapa) TransferToBank(request *BankTransfer) (*BankTransferResponse, er
 	return &response, nil
 }
 
-func (c *chapa) getTransactions() (*TransactionsResponse, error) {
+func (c *chapa) GetTransactions() (*TransactionsResponse, error) {
 	req, err := http.NewRequest(http.MethodGet, transactionsV1APIURL, nil)
 	if err != nil {
 		log.Printf("error %v", err)
@@ -198,7 +197,7 @@ func (c *chapa) getTransactions() (*TransactionsResponse, error) {
 	return &response, nil
 }
 
-func (c *chapa) getBanks() (*BanksResponse, error) {
+func (c *chapa) GetBanks() (*BanksResponse, error) {
 	req, err := http.NewRequest(http.MethodGet, banksV1APIURL, nil)
 	if err != nil {
 		log.Printf("error %v", err)
@@ -230,11 +229,11 @@ func (c *chapa) getBanks() (*BanksResponse, error) {
 	return &response, nil
 }
 
-func (c *chapa) bulkTransfer(request *BulkTransferRequest) (*BulkTransferResponse, error) {
+func (c *chapa) BulkTransfer(request *BulkTransferRequest) (*BulkTransferResponse, error) {
 	var err error
 	if err = request.Validate(); err != nil {
 		err := fmt.Errorf("invalid input %v", err)
-		log.Printf("error %v input %v", err, request)
+		log.Printf("warning %v input %v", err, request)
 		return nil, err
 	}
 
